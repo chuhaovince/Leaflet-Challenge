@@ -16,4 +16,14 @@ var geoJsonURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_
 
 var map = L.map("map", mapConfig);
 
-var mapLayer = L.
+// Adding tile layer
+L.tileLayer(tileURL, tileConfig).addTo(map);
+
+// Loading geojson data
+d3.json(geoJsonURL).then(function(response) {
+    var geodata = L.choropleth(response, {
+
+        // Define what property in the features to use
+        valueProperty : ""
+    })
+})
