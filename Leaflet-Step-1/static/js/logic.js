@@ -34,13 +34,14 @@ d3.json(geoJsonURL).then(function(response) {
 
     // Define color scales
   function colorscale(color) {
-    return color > 5  ? '#ff1111' :
-           color > 4  ? '#ff6633' :
-           color > 3  ? '#ff9933' :
-           color > 2  ? '#ffcc33' :
-           color > 1  ? '#ffff33' :
-                        '#ccff33';
+    return color > 5  ?  "#c71e1e" :
+           color > 4  ?  "#ea822c" :
+           color > 3  ?  "#ee9c00" :
+           color > 2  ?  "#eecc00" :
+           color > 1  ?  "#b8d800" :
+                         "#98ee00";
   }
+
     // Adding legends
     var legend = L.control({position : "bottomright"});
     legend.onAdd = function() {
@@ -50,7 +51,7 @@ d3.json(geoJsonURL).then(function(response) {
 
         // loop through colors
         for (var i = 0; i < mags.length; i++) {
-            labels.push('<i style="background:' + colorscale(mags[i]) + '"></i>' +
+            labels.push('<i class = "box" style="background:' + colorscale(mags[i]+1) + '"> </i>' +
             mags[i] + (mags[i + 1] ? '&ndash;' + mags[i + 1] + '<br>' : '+'))
         };
         div.innerHTML += labels.join("");
