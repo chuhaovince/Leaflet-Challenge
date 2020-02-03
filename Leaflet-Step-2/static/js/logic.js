@@ -2,15 +2,6 @@ var tectonicURL = "assets/tectonic_GeoJSON/PB2002_boundaries.json";
 var earthquake_geoJsonURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
 function CreateMap(earthquake, tectonic) {
-  var mapConfig = {
-    center: [37.09, -95.71],
-    zoom:5,
-    types : [
-      satellitemap,
-      earthquake,
-      tectonic
-    ]
-  };
 
   var greyscalemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
     attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
@@ -32,6 +23,16 @@ function CreateMap(earthquake, tectonic) {
     id: "mapbox.streets",
     accessToken: API_KEY
   });
+
+  var mapConfig = {
+    center: [37.09, -95.71],
+    zoom:5,
+    layers : [
+      satellitemap,
+      earthquake,
+      tectonic
+    ]
+  };
 
   // Create a basemap object to hold the greyscale layer
   var basemap = {
@@ -70,7 +71,6 @@ function CreateMap(earthquake, tectonic) {
       return div;
   };
   legend.addTo(map);
-
 };
 
 // Define color scales
@@ -88,7 +88,6 @@ var earthquake = new L.layerGroup();
 //create tectonic layergroup
 var tectonic = new L.layerGroup();
 
-
 // Loading earthquake geojson data and add the data to earthquake variable
 d3.json(earthquake_geoJsonURL, function(response) {
   response.features.forEach(location => 
@@ -98,7 +97,7 @@ d3.json(earthquake_geoJsonURL, function(response) {
           radius : location.properties.mag * 10000
       })
       .bindPopup(`<h3><strong>${location.properties.place}</strong></h3><hr><h4>M level: ${location.properties.mag}</h4><hr><h4>Time: ${new Date(location.properties.time)}</h4>`)
-  ).addTo(earthquake);
+      .addTo(earthquake));
 });
 
 // Load tectonic data and add to tectonic variable
