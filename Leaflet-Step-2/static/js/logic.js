@@ -1,46 +1,68 @@
-var mapConfig = {
-    center: [37.09, -95.71],
-    zoom:5
-};
+var tectonicURL = "assets/tectonic_GeoJSON/PB2002_boundaries.json";
+var earthquake_geoJsonURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-var tileURL = "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}"
-
-var tileConfig = {
+var greyscalemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
   attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
   maxZoom: 18,
-  id: "mapbox.streets-basic",
+  id: "mapbox.light",
   accessToken: API_KEY
+});
+
+var satellitemap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.satellite",
+  accessToken: API_KEY
+});
+
+var outdoormap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+  attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+  maxZoom: 18,
+  id: "mapbox.streets",
+  accessToken: API_KEY
+});
+
+
+// Initialize all of the LayerGroups we'll be using
+// var layers = {
+//   greyscale : new L.layerGroup(),
+//   outdoors : new L.layerGroup(),
+//   satellite : new L.layerGroup()
+// };
+
+// Create a basemap object to hold the greyscale layer
+var basemap = {
+  "Greyscale" : greyscalemap,
+  "Outdoors" : outdoormap,
+  "Satellite" : satellitemap
 };
 
-var geoJsonURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
+// Create earthquake layergroup
+var earthquake = new L.layerGroup();
+//create tectonic layergroup
+var tectonic = new L.layerGroup();
 
-var map = L.map("map", mapConfig);
-
-// Adding tile layer
-L.tileLayer(tileURL, tileConfig).addTo(map);
-
-
-// Loading geojson data
-d3.json(geoJsonURL).then(function(response) {
+function MarkersAndLegend() {
+  // Loading earthquake geojson data and add the data to earthquake variable
+  d3.json(earthquake_geoJsonURL, function(response) {
     response.features.forEach(location => 
         L.circle(location.geometry.coordinates.slice(0,2).reverse(), {
             fillOpacity : 0.8,
             color : colorscale(location.properties.mag),
             radius : location.properties.mag * 10000
-    })
-    .bindPopup(`<h3><strong>${location.properties.place}</strong></h3><hr><h4>M level: ${location.properties.mag}</h4><hr><h4>Time: ${new Date(location.properties.time)}</h4>`)
-    .addTo(map)
-    );
+        })
+        .bindPopup(`<h3><strong>${location.properties.place}</strong></h3><hr><h4>M level: ${location.properties.mag}</h4><hr><h4>Time: ${new Date(location.properties.time)}</h4>`)
+    ).addTo(earthquake);
 
-    // Define color scales
-  function colorscale(color) {
-    return color > 5  ?  "#c71e1e" :
-           color > 4  ?  "#ea822c" :
-           color > 3  ?  "#ee9c00" :
-           color > 2  ?  "#eecc00" :
-           color > 1  ?  "#b8d800" :
-                         "#98ee00";
-  }
+      // Define color scales
+    function colorscale(color) {
+      return color > 5  ?  "#c71e1e" :
+            color > 4  ?  "#ea822c" :
+            color > 3  ?  "#ee9c00" :
+            color > 2  ?  "#eecc00" :
+            color > 1  ?  "#b8d800" :
+                          "#98ee00";
+    }
 
     // Adding legends
     var legend = L.control({position : "bottomright"});
@@ -58,5 +80,46 @@ d3.json(geoJsonURL).then(function(response) {
 
         return div;
     };
-      legend.addTo(map);
+    legend.addTo(map);
+  });
+};
+
+// Load tectonic data and add to tectonic variable
+d3.json(tectonicURL, function(response) {
+  L.geoJSON(response, {
+    style : function() {
+      return {
+        fillOpacity: 0.7,
+        weight : 1.5,
+        fillColor : "orange"
+      }
+    }
+  }).addTo(tectonic)
 });
+
+MarkersAndLegend();
+
+var mapConfig = {
+  center: [37.09, -95.71],
+  zoom:5,
+  types : [
+    satellitemap,
+    earthquake,
+    tectonic
+  ]
+};
+
+// Create an overlaymap object to hold the earthquake and tectonic layers
+var overlays = {
+  "Earthquakes" : earthquake,
+  "Fault lines" : tectonic
+};
+
+// Create the default map with the satellite layers
+var map = L.map("map", mapConfig);
+
+
+// Pass our map layers into our layer control
+// Add the layer control to the map
+L.control.layers(basemap, overlays, {collapsed : false}).addTo(map);
+
